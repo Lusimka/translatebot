@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Визначник пози йоги</title>
+  <style>
+
+    body {
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    #previewImage {
+      max-width: 300px;
+      max-height: 300px;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>Визначник пози йоги</h1>
+  <input type="file" id="imageUpload" accept="image/*">
+  <img id="previewImage" src="#" alt="Попередній перегляд зображення">
+  <button id="predictButton">Визначити позу</button>
+  <div id="result"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js"></script>
+  <script>
+    async function loadModel() {
+      const model = await tf.loadLayersModel('tfjs_yoga_pose_model/model.json');
+      return model;
+    }
+
+    async function predict(model, image) {
+      const img = tf.browser.fromPixels(image)
+        .resizeNearestNeighbor([224, 224])
+        .toFloat()
+        .expandDims();
+
+      const predictions = await model.predict(img).data();
+      const classIndex = predictions.indexOf(Math.max(...predictions));
+
+      const classNames = [
+  'adho mukha svanasana',
+  'adho mukha vriksasana',
+  'agnistambhasana',
+  'ananda balasana',
+  'anantasana',
+  'anjaneyasana',
+  'ardha bhekasana',
+  'ardha chandrasana',
+  'ardha matsyendrasana',
+  'ardha pincha mayurasana',
+  'ardha uttanasana',
+  'ashtanga namaskara',
+  'astavakrasana',
+  'baddha konasana',
+  'bakasana',
+  'balasana',
+  'bhairavasana',
+  'bharadvajasana i',
+  'bhekasana',
+  'bhujangasana',
+  'bhujapidasana',
+  'bitilasana',
+  'camatkarasana',
+  'chakravakasana',
+  'chaturanga dandasana',
+  'dandasana',
+  'dhanurasana',
+  'durvasasana',
+  'dwi pada viparita dandasana',
+  'eka pada koundinyanasana i',
+  'eka pada koundinyanasana ii',
+  'eka pada rajakapotasana',
+  'eka pada rajakapotasana ii',
+  'ganda bherundasana',
+  'garbha pindasana',
+  'garudasana',
+  'gomukhasana',
+  'halasana',
+  'hanumanasana',
+  'janu sirsasana',
+  'kapotasana',
+  'krounchasana',
+  'kurmasana',
+  'lolasana',
+  'makara adho mukha svanasana',
+  'makarasana',
+  'malasana',
+  'marichyasana i',
+  'marichyasana iii',
+  'marjaryasana',
+  'matsyasana',
+  'mayurasana',
+  'natarajasana',
+  'padangusthasana',
+  'padmasana',
+  'parighasana',
+  'paripurna navasana',
+  'parivrtta janu sirsasana',
+  'parivrtta parsvakonasana',
+  'parivrtta trikonasana',
+  'parsva bakasana',
+  'parsvottanasana',
+  'pasasana',
+  'paschimottanasana',
+  'phalakasana',
+  'pincha mayurasana',
+  'prasarita padottanasana',
+  'purvottanasana',
+  'salabhasana',
+  'salamba bhujangasana',
+  'salamba sarvangasana',
+  'salamba sirsasana',
+  'savasana',
+  'setu bandha sarvangasana',
+  'simhasana',
+  'sukhasana',
+  'supta baddha konasana',
+  'supta matsyendrasana',
+  'supta padangusthasana',
+  'supta virasana',
+  'tadasana',
+  'tittibhasana',
+  'tolasana',
+  'tulasana',
+  'upavistha konasana',
+  'urdhva dhanurasana',
+  'urdhva hastasana',
+  'urdhva mukha svanasana',
+  'urdhva prasarita eka padasana',
+  'ustrasana',
+  'utkatasana',
+  'uttana shishosana',
+  'uttanasana',
+  'utthita ashwa sanchalanasana',
+  'utthita hasta padangustasana',
+  'utthita parsvakonasana',
+  'utthita trikonasana',
+  'vajrasana',
+  'vasisthasana',
+  'viparita karani',
+  'virabhadrasana i',
+  'virabhadrasana ii',
+  'virabhadrasana iii',
+  'virasana',
+  'vriksasana',
+  'vrischikasana',
+  'yoganidrasana'
+];
+      const result = classNames[classIndex];
+      return result;
+    }
+
+    window.onload = function() {
+      let model;
+      loadModel().then(m => model = m);
+
+      const imageUpload = document.getElementById('imageUpload');
+      const previewImage = document.getElementById('previewImage');
+      const predictButton = document.getElementById('predictButton');
+      const resultDiv = document.getElementById('result');
+
+      imageUpload.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+          }
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      });
+
+      predictButton.addEventListener('click', function() {
+        if (previewImage.src) {
+          const img = new Image();
+          img.src = previewImage.src;
+          img.onload = function() {
+            predict(model, img).then(result => {
+              resultDiv.textContent = `Поза: ${result}`;
+            });
+          }
+        } else {
+          resultDiv.textContent = "Будь ласка, завантажте зображення.";
+        }
+      });
+    }
+  </script>
+</body>
+</html>
