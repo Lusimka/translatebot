@@ -1,45 +1,55 @@
+HTML
+
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Визначник пози йоги</title>
-  <style>
+  <title>Визначник пози йоги</title>
+  <style>
+    body {
+      font-family: sans-serif; // Встановлення шрифту.
+      text-align: center; // Вирівнювання тексту по центру.
+    }
 
-    body {
-      font-family: sans-serif;
-      text-align: center;
-    }
-
-    #previewImage {
-      max-width: 300px;
-      max-height: 300px;
-    }
-
-  </style>
+    #previewImage {
+      max-width: 300px; // Максимальна ширина зображення для попереднього перегляду.
+      max-height: 300px; // Максимальна висота зображення для попереднього перегляду.
+    }
+  </style>
 </head>
 <body>
-  <h1>Визначник пози йоги</h1>
-  <input type="file" id="imageUpload" accept="image/*">
-  <img id="previewImage" src="#" alt="Попередній перегляд зображення">
-  <button id="predictButton">Визначити позу</button>
-  <div id="result"></div>
+  <h1>Визначник пози йоги</h1>
+  <input type="file" id="imageUpload" accept="image/*">
+    // Поле для завантаження файлу.
+    // accept="image/*": Дозволяє вибирати тільки файли зображень.
+  <img id="previewImage" src="#" alt="Попередній перегляд зображення">
+    // Елемент для відображення попереднього перегляду зображення.
+  <button id="predictButton">Визначити позу</button>
+    // Кнопка для запуску передбачення.
+  <div id="result"></div>
+    // Елемент для відображення результату передбачення.
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js"></script>
-  <script>
-    async function loadModel() {
-      const model = await tf.loadLayersModel('tfjs_yoga_pose_model/model.json');
-      return model;
-    }
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js"></script>
+    // Підключення TensorFlow.js.
+  <script>
+    async function loadModel() { // Асинхронна функція для завантаження моделі.
+      const model = await tf.loadLayersModel('tfjs_yoga_pose_model/model.json');
+        // Завантаження моделі з файлу model.json.
+        // Шлях 'tfjs_yoga_pose_model/model.json' повинен бути відносним до вашого html файлу
+      return model;
+    }
 
-    async function predict(model, image) {
-      const img = tf.browser.fromPixels(image)
-        .resizeNearestNeighbor([224, 224])
-        .toFloat()
-        .expandDims();
+    async function predict(model, image) { // Асинхронна функція для передбачення.
+      const img = tf.browser.fromPixels(image) // Перетворення зображення з HTML елемента в тензор.
+        .resizeNearestNeighbor([224, 224]) // Зміна розміру зображення до 224x224.
+        .toFloat() // Перетворення тензора в тип даних float32.
+        .expandDims(); // Додавання розмірності пакета (batch).
 
-      const predictions = await model.predict(img).data();
-      const classIndex = predictions.indexOf(Math.max(...predictions));
+      const predictions = await model.predict(img).data(); // Отримання передбачень моделі.
+        // data() повертає Promise, що містить масив передбачень
 
-      const classNames = [
+      const classIndex = predictions.indexOf(Math.max(...predictions)); // Знаходження індексу класу з найбільшою ймовірністю.
+
+      const classNames = [ // Масив назв класів.
   'adho mukha svanasana',
   'adho mukha vriksasana',
   'agnistambhasana',
@@ -148,43 +158,43 @@
   'vrischikasana',
   'yoganidrasana'
 ];
-      const result = classNames[classIndex];
-      return result;
-    }
+      const result = classNames[classIndex]; // Отримання назви класу за індексом.
+      return result; // Повернення результату.
+    }
 
-    window.onload = function() {
-      let model;
-      loadModel().then(m => model = m);
+    window.onload = function() { // Функція, що виконується після завантаження сторінки.
+      let model;
+      loadModel().then(m => model = m); // Завантаження моделі та збереження в змінну model.
 
-      const imageUpload = document.getElementById('imageUpload');
-      const previewImage = document.getElementById('previewImage');
-      const predictButton = document.getElementById('predictButton');
-      const resultDiv = document.getElementById('result');
+      const imageUpload = document.getElementById('imageUpload'); // Отримання елемента завантаження файлу.
+      const previewImage = document.getElementById('previewImage'); // Отримання елемента для попереднього перегляду.
+      const predictButton = document.getElementById('predictButton'); // Отримання кнопки передбачення.
+      const resultDiv = document.getElementById('result'); // Отримання елемента для відображення результату.
 
-      imageUpload.addEventListener('change', function(e) {
-        if (e.target.files && e.target.files[0]) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            previewImage.src = e.target.result;
-          }
-          reader.readAsDataURL(e.target.files[0]);
-        }
-      });
+      imageUpload.addEventListener('change', function(e) { // Обробник події зміни файлу.
+        if (e.target.files && e.target.files[0]) { // Перевірка, чи вибрано файл.
+          const reader = new FileReader(); // Створення об'єкта FileReader.
+          reader.onload = function(e) { // Обробник події завантаження файлу.
+            previewImage.src = e.target.result; // Встановлення джерела зображення для попереднього перегляду.
+          }
+          reader.readAsDataURL(e.target.files[0]); // Читання файлу як Data URL.
+        }
+      });
 
-      predictButton.addEventListener('click', function() {
-        if (previewImage.src) {
-          const img = new Image();
-          img.src = previewImage.src;
-          img.onload = function() {
-            predict(model, img).then(result => {
-              resultDiv.textContent = `Поза: ${result}`;
-            });
-          }
-        } else {
-          resultDiv.textContent = "Будь ласка, завантажте зображення.";
-        }
-      });
-    }
-  </script>
+      predictButton.addEventListener('click', function() { // Обробник події натискання на кнопку передбачення.
+        if (previewImage.src) { // Перевірка, чи завантажено зображення.
+          const img = new Image(); // Створення об'єкта Image.
+          img.src = previewImage.src; // Встановлення джерела зображення.
+          img.onload = function() { // Обробник події завантаження зображення.
+            predict(model, img).then(result => { // Виклик функції передбачення та отримання результату.
+              resultDiv.textContent = `Поза: ${result}`; // Відображення результату на сторінці.
+            });
+          }
+        } else {
+          resultDiv.textContent = "Будь ласка, завантажте зображення."; // Повідомлення про необхідність завантаження зображення.
+        }
+      });
+    }
+  </script>
 </body>
 </html>
